@@ -1,0 +1,90 @@
+server:
+  port: 8083
+
+spring:
+  application:
+    name: chat-service
+
+  datasource:
+    url: ${POSTGRES_URL:jdbc:postgresql://localhost:5432/elh}
+    username: ${POSTGRES_USERNAME:elh}
+    password: ${POSTGRES_PASSWORD:elh}
+    hikari:
+      maximum-pool-size: 5
+      minimum-idle: 2
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    consumer:
+      group-id: chat-service
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "com.elh.commons.events,com.elh.commons.events.*"
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:elh}
+    password: ${RABBITMQ_PASSWORD:elh}
+    template:
+      retry:
+        enabled: true
+        max-attempts: 3
+
+anthropic:
+  api-key: ${ANTHROPIC_API_KEY:}
+  model: ${ANTHROPIC_MODEL:claude-haiku-4-5-20251001}
+  max-tokens: 1024
+  system-prompt: >
+    Voce eh o ELH (Every Losted History), um bot assistente de um servidor Discord.
+    Voce eh amigavel, direto e responde em portugues brasileiro.
+    Quando nao souber algo, diga que nao sabe. Mantenha respostas concisas.
+
+chat:
+  session:
+    ttl-minutes: 30
+    max-messages: 20
+
+resilience4j:
+  ratelimiter:
+    instances:
+      claude-api:
+        limit-for-period: 30
+        limit-refresh-period: 60s
+        timeout-duration: 5s
+  circuitbreaker:
+    instances:
+      claude-api:
+        sliding-window-size: 10
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 30s
+        sliding-window-type: COUNT_BASED
+  retry:
+    instances:
+      claude-api:
+        max-attempts: 2
+        wait-duration: 1s
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  metrics:
+    tags:
+      application: chat-service

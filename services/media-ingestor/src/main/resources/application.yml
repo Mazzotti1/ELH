@@ -1,0 +1,90 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: media-ingestor
+
+  datasource:
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DB:elh}
+    username: ${POSTGRES_USER:elh}
+    password: ${POSTGRES_PASS:elh}
+    hikari:
+      maximum-pool-size: 10
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    consumer:
+      group-id: media-ingestor
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: com.elh.commons.events
+        spring.json.use.type.headers: false
+        spring.json.value.default.type: com.elh.commons.events.MediaDetectedEvent
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        spring.json.add.type.headers: false
+      acks: all
+
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+
+aws:
+  s3:
+    bucket: ${S3_BUCKET:elh-media}
+    region: ${AWS_REGION:us-east-1}
+    endpoint: ${S3_ENDPOINT:}
+    access-key: ${AWS_ACCESS_KEY_ID:test}
+    secret-key: ${AWS_SECRET_ACCESS_KEY:test}
+
+media:
+  download:
+    timeout-seconds: 30
+    max-size-mb: 100
+  thumbnail:
+    width: 320
+    height: 320
+    quality: 0.8
+
+resilience4j:
+  bulkhead:
+    instances:
+      image-download:
+        maxConcurrentCalls: 10
+      video-download:
+        maxConcurrentCalls: 3
+  retry:
+    instances:
+      s3-upload:
+        maxAttempts: 3
+        waitDuration: 1s
+        retryExceptions:
+          - software.amazon.awssdk.core.exception.SdkException
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  metrics:
+    tags:
+      application: media-ingestor
+
+logging:
+  level:
+    com.elh.ingestor: DEBUG
+  pattern:
+    console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"

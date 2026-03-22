@@ -1,0 +1,222 @@
+# ──────────────────────────────────────────────────────────────────────
+#  ELH — Servicos da aplicacao
+#  Este arquivo e automaticamente mergeado com docker-compose.yml
+#
+#  Uso:
+#    docker compose up -d                  → sobe TUDO (infra + apps)
+#    docker compose up -d discord-gateway  → sobe so o gateway + deps
+#    docker compose logs -f discord-gateway → acompanha logs
+# ──────────────────────────────────────────────────────────────────────
+
+services:
+  discord-gateway:
+    build:
+      context: .
+      target: discord-gateway
+    container_name: elh-discord-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_USERNAME: elh
+      RABBITMQ_PASSWORD: elh
+      DISCORD_BOT_TOKEN: ${DISCORD_BOT_TOKEN:}
+    depends_on:
+      kafka:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - elh-net
+    restart: on-failure
+
+  media-ingestor:
+    build:
+      context: .
+      target: media-ingestor
+    container_name: elh-media-ingestor
+    ports:
+      - "8081:8081"
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: elh
+      POSTGRES_USER: elh
+      POSTGRES_PASS: elh
+      S3_BUCKET: elh-media-dev
+      S3_ENDPOINT: http://localstack:4566
+      AWS_REGION: us-east-1
+      AWS_ACCESS_KEY_ID: test
+      AWS_SECRET_ACCESS_KEY: test
+    depends_on:
+      kafka:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      localstack:
+        condition: service_healthy
+    networks:
+      - elh-net
+    restart: on-failure
+
+  search-service:
+    build:
+      context: .
+      target: search-service
+    container_name: elh-search-service
+    ports:
+      - "8082:8082"
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      ELASTICSEARCH_URI: http://elasticsearch:9200
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_USERNAME: elh
+      RABBITMQ_PASSWORD: elh
+      GOOGLE_CSE_API_KEY: ${GOOGLE_CSE_API_KEY:}
+      GOOGLE_CSE_CX: ${GOOGLE_CSE_CX:}
+    depends_on:
+      kafka:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - elh-net
+    restart: on-failure
+
+  chat-service:
+    build:
+      context: .
+      target: chat-service
+    container_name: elh-chat-service
+    ports:
+      - "8083:8083"
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      POSTGRES_URL: jdbc:postgresql://postgres:5432/elh
+      POSTGRES_USERNAME: elh
+      POSTGRES_PASSWORD: elh
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_USERNAME: elh
+      RABBITMQ_PASSWORD: elh
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:}
+      ANTHROPIC_MODEL: ${ANTHROPIC_MODEL:claude-haiku-4-5-20251001}
+    depends_on:
+      kafka:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - elh-net
+    restart: on-failure
+
+  poll-scheduler:
+    build:
+      context: .
+      target: poll-scheduler
+    container_name: elh-poll-scheduler
+    ports:
+      - "8084:8084"
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      POSTGRES_URL: jdbc:postgresql://postgres:5432/elh
+      POSTGRES_USERNAME: elh
+      POSTGRES_PASSWORD: elh
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_USERNAME: elh
+      RABBITMQ_PASSWORD: elh
+    depends_on:
+      kafka:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - elh-net
+    restart: on-failure
+
+  notification-service:
+    build:
+      context: .
+      target: notification-service
+    container_name: elh-notification-service
+    ports:
+      - "8085:8085"
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_USERNAME: elh
+      RABBITMQ_PASSWORD: elh
+    depends_on:
+      kafka:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - elh-net
+    restart: on-failure
+
+  stats-service:
+    build:
+      context: .
+      target: stats-service
+    container_name: elh-stats-service
+    ports:
+      - "8086:8086"
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      POSTGRES_URL: jdbc:postgresql://postgres:5432/elh
+      POSTGRES_USERNAME: elh
+      POSTGRES_PASSWORD: elh
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_USERNAME: elh
+      RABBITMQ_PASSWORD: elh
+    depends_on:
+      kafka:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - elh-net
+    restart: on-failure
+
+  api-gateway:
+    build:
+      context: .
+      target: api-gateway
+    container_name: elh-api-gateway
+    ports:
+      - "8000:8000"
+    environment:
+      DISCORD_GATEWAY_URL: http://discord-gateway:8080
+      MEDIA_INGESTOR_URL: http://media-ingestor:8081
+      SEARCH_SERVICE_URL: http://search-service:8082
+      CHAT_SERVICE_URL: http://chat-service:8083
+      POLL_SCHEDULER_URL: http://poll-scheduler:8084
+      NOTIFICATION_SERVICE_URL: http://notification-service:8085
+      STATS_SERVICE_URL: http://stats-service:8086
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    depends_on:
+      - discord-gateway
+      - media-ingestor
+      - search-service
+      - chat-service
+      - poll-scheduler
+      - notification-service
+      - stats-service
+    networks:
+      - elh-net
+    restart: on-failure

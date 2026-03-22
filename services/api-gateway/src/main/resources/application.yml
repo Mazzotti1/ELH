@@ -1,0 +1,92 @@
+server:
+  port: 8000
+
+spring:
+  application:
+    name: api-gateway
+
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+
+  cloud:
+    gateway:
+      default-filters:
+        - name: RequestRateLimiter
+          args:
+            redis-rate-limiter.replenishRate: 10
+            redis-rate-limiter.burstCapacity: 20
+      routes:
+        - id: discord-gateway
+          uri: ${DISCORD_GATEWAY_URL:http://localhost:8080}
+          predicates:
+            - Path=/api/discord/**
+          filters:
+            - StripPrefix=2
+
+        - id: media-ingestor
+          uri: ${MEDIA_INGESTOR_URL:http://localhost:8081}
+          predicates:
+            - Path=/api/media/**
+          filters:
+            - StripPrefix=2
+
+        - id: search-service
+          uri: ${SEARCH_SERVICE_URL:http://localhost:8082}
+          predicates:
+            - Path=/api/search/**
+          filters:
+            - StripPrefix=2
+
+        - id: chat-service
+          uri: ${CHAT_SERVICE_URL:http://localhost:8083}
+          predicates:
+            - Path=/api/chat/**
+          filters:
+            - StripPrefix=2
+
+        - id: poll-scheduler
+          uri: ${POLL_SCHEDULER_URL:http://localhost:8084}
+          predicates:
+            - Path=/api/poll/**
+          filters:
+            - StripPrefix=2
+
+        - id: notification-service
+          uri: ${NOTIFICATION_SERVICE_URL:http://localhost:8085}
+          predicates:
+            - Path=/api/notification/**
+          filters:
+            - StripPrefix=2
+
+        - id: stats-service
+          uri: ${STATS_SERVICE_URL:http://localhost:8086}
+          predicates:
+            - Path=/api/stats/**
+          filters:
+            - StripPrefix=2
+
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,gateway
+  endpoint:
+    gateway:
+      enabled: true
+  metrics:
+    tags:
+      application: api-gateway

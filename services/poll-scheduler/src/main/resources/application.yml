@@ -1,0 +1,59 @@
+server:
+  port: 8084
+
+spring:
+  application:
+    name: poll-scheduler
+
+  datasource:
+    url: ${POSTGRES_URL:jdbc:postgresql://localhost:5432/elh}
+    username: ${POSTGRES_USERNAME:elh}
+    password: ${POSTGRES_PASSWORD:elh}
+    hikari:
+      maximum-pool-size: 5
+      minimum-idle: 2
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    consumer:
+      group-id: poll-scheduler
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "com.elh.commons.events,com.elh.commons.events.*"
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:elh}
+    password: ${RABBITMQ_PASSWORD:elh}
+    template:
+      retry:
+        enabled: true
+        max-attempts: 3
+
+poll:
+  auto:
+    enabled: true
+    cron: "0 0 18 * * FRI"
+    candidates-count: 5
+    duration-hours: 48
+    default-title: "Midia da Semana"
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  metrics:
+    tags:
+      application: poll-scheduler
