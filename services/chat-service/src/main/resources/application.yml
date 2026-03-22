@@ -46,14 +46,21 @@ spring:
         enabled: true
         max-attempts: 3
 
-anthropic:
-  api-key: ${ANTHROPIC_API_KEY:}
-  model: ${ANTHROPIC_MODEL:claude-haiku-4-5-20251001}
+ai:
+  provider: ${AI_PROVIDER:anthropic}
   max-tokens: 1024
   system-prompt: >
     Voce eh o ELH (Every Losted History), um bot assistente de um servidor Discord.
     Voce eh amigavel, direto e responde em portugues brasileiro.
     Quando nao souber algo, diga que nao sabe. Mantenha respostas concisas.
+
+anthropic:
+  api-key: ${ANTHROPIC_API_KEY:}
+  model: ${ANTHROPIC_MODEL:claude-haiku-4-5-20251001}
+
+openai:
+  api-key: ${OPENAI_API_KEY:}
+  model: ${OPENAI_MODEL:gpt-4o-mini}
 
 chat:
   session:
@@ -63,20 +70,20 @@ chat:
 resilience4j:
   ratelimiter:
     instances:
-      claude-api:
+      ai-provider:
         limit-for-period: 30
         limit-refresh-period: 60s
         timeout-duration: 5s
   circuitbreaker:
     instances:
-      claude-api:
+      ai-provider:
         sliding-window-size: 10
         failure-rate-threshold: 50
         wait-duration-in-open-state: 30s
         sliding-window-type: COUNT_BASED
   retry:
     instances:
-      claude-api:
+      ai-provider:
         max-attempts: 2
         wait-duration: 1s
 

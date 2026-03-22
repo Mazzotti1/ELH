@@ -104,8 +104,11 @@ services:
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_USERNAME: elh
       RABBITMQ_PASSWORD: elh
+      AI_PROVIDER: ${AI_PROVIDER:anthropic}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:}
       ANTHROPIC_MODEL: ${ANTHROPIC_MODEL:claude-haiku-4-5-20251001}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:}
+      OPENAI_MODEL: ${OPENAI_MODEL:gpt-4o-mini}
     depends_on:
       kafka:
         condition: service_healthy

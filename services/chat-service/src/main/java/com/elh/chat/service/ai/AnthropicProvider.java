@@ -1,33 +1,31 @@
-package com.elh.chat.service;
+package com.elh.chat.service.ai;
 
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import io.github.resilience4j.retry.annotation.Retry;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
 import java.util.List;
 import java.util.Map;
 
 @Slf4j
-@Service
-public class ClaudeApiService {
+public class AnthropicProvider implements AiProvider {
 
     private final RestClient restClient;
+    private final String model;
+    private final int maxTokens;
+    private final String systemPrompt;
 
-    @Value("${anthropic.model:claude-haiku-4-5-20251001}")
-    private String model;
-
-    @Value("${anthropic.max-tokens:1024}")
-    private int maxTokens;
-
-    @Value("${anthropic.system-prompt:Voce eh o ELH, um bot assistente de Discord.}")
-    private String systemPrompt;
-
-    public ClaudeApiService(RestClient.Builder restClientBuilder,
-                            @Value("${anthropic.api-key:}") String apiKey) {
+    public AnthropicProvider(RestClient.Builder restClientBuilder,
+                             String apiKey,
+                             String model,
+                             int maxTokens,
+                             String systemPrompt) {
+        this.model = model;
+        this.maxTokens = maxTokens;
+        this.systemPrompt = systemPrompt;
         this.restClient = restClientBuilder
                 .baseUrl("https://api.anthropic.com")
                 .defaultHeader("x-api-key", apiKey)
@@ -36,11 +34,12 @@ public class ClaudeApiService {
                 .build();
     }
 
-    @CircuitBreaker(name = "claude-api", fallbackMethod = "fallbackChat")
-    @RateLimiter(name = "claude-api")
-    @Retry(name = "claude-api")
+    @Override
+    @CircuitBreaker(name = "ai-provider", fallbackMethod = "fallbackChat")
+    @RateLimiter(name = "ai-provider")
+    @Retry(name = "ai-provider")
     public ChatResponse chat(List<Map<String, String>> conversationHistory) {
-        log.info("Chamando Claude API (model={}, mensagens={})", model, conversationHistory.size());
+        log.info("Chamando Anthropic API (model={}, mensagens={})", model, conversationHistory.size());
 
         Map<String, Object> requestBody = Map.of(
                 "model", model,
@@ -57,7 +56,7 @@ public class ClaudeApiService {
                 .body(Map.class);
 
         if (response == null) {
-            throw new RuntimeException("Resposta nula da Claude API");
+            throw new RuntimeException("Resposta nula da Anthropic API");
         }
 
         @SuppressWarnings("unchecked")
@@ -73,19 +72,16 @@ public class ClaudeApiService {
         int inputTokens = usage != null ? ((Number) usage.get("input_tokens")).intValue() : 0;
         int outputTokens = usage != null ? ((Number) usage.get("output_tokens")).intValue() : 0;
 
-        log.info("Claude respondeu: {} input tokens, {} output tokens", inputTokens, outputTokens);
-
+        log.info("Anthropic respondeu: {} input tokens, {} output tokens", inputTokens, outputTokens);
         return new ChatResponse(text, inputTokens, outputTokens);
     }
 
     @SuppressWarnings("unused")
     private ChatResponse fallbackChat(List<Map<String, String>> conversationHistory, Throwable t) {
-        log.warn("Claude API indisponivel ({}), enviando fallback", t.getMessage());
+        log.warn("Anthropic API indisponivel ({}), enviando fallback", t.getMessage());
         return new ChatResponse(
                 "Desculpa, estou com dificuldades tecnicas no momento. Tente novamente em alguns segundos!",
                 0, 0
         );
     }
-
-    public record ChatResponse(String text, int inputTokens, int outputTokens) {}
 }

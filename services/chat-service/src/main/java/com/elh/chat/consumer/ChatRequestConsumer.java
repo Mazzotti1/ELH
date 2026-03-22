@@ -1,9 +1,9 @@
 package com.elh.chat.consumer;
 
 import com.elh.chat.service.ChatSessionService;
-import com.elh.chat.service.ClaudeApiService;
-import com.elh.chat.service.ClaudeApiService.ChatResponse;
 import com.elh.chat.service.DiscordResponseSender;
+import com.elh.chat.service.ai.AiProvider;
+import com.elh.chat.service.ai.ChatResponse;
 import com.elh.commons.config.KafkaTopics;
 import com.elh.commons.events.ChatRequestedEvent;
 import com.elh.commons.events.ChatRespondedEvent;
@@ -24,7 +24,7 @@ import java.util.Map;
 public class ChatRequestConsumer {
 
     private final ChatSessionService sessionService;
-    private final ClaudeApiService claudeApi;
+    private final AiProvider aiProvider;
     private final DiscordResponseSender sender;
     private final KafkaTemplate<String, BaseEvent> kafkaTemplate;
 
@@ -42,7 +42,7 @@ public class ChatRequestConsumer {
         history.add(Map.of("role", "user", "content", event.getUserMessage()));
         sessionService.addMessage(sessionKey, "user", event.getUserMessage());
 
-        ChatResponse response = claudeApi.chat(history);
+        ChatResponse response = aiProvider.chat(history);
 
         sessionService.addMessage(sessionKey, "assistant", response.text());
 
