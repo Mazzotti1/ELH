@@ -47,7 +47,7 @@ public class SlashCommandRegistrar {
                                 new OptionData(OptionType.STRING, "periodo", "semana, mes ou all-time", false)
                         ),
 
-                Commands.slash("elh", "Conversa com o bot via IA")
+                Commands.slash("elh", "Conversa com o bot")
                         .addOptions(
                                 new OptionData(OptionType.STRING, "mensagem", "Sua mensagem", true)
                         ),

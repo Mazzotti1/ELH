@@ -147,9 +147,9 @@ services:
     ports:
       - "9200:9200"
     environment:
-      discovery.type: single-node
-      xpack.security.enabled: false
-      ES_JAVA_OPTS: "-Xms512m -Xmx512m"
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
     volumes:
       - es-data:/usr/share/elasticsearch/data
     networks:
@@ -183,8 +183,8 @@ services:
     ports:
       - "3000:3000"
     environment:
-      GF_SECURITY_ADMIN_PASSWORD: admin
-      GF_USERS_ALLOW_SIGN_UP: false
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
     volumes:
       - grafana-data:/var/lib/grafana
       - ./infra/grafana/provisioning:/etc/grafana/provisioning:ro

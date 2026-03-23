@@ -29,7 +29,7 @@ public class KafkaProducerConfig {
                 ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers,
                 ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class,
                 ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class,
-                JsonSerializer.ADD_TYPE_INFO_HEADERS, false,
+                JsonSerializer.ADD_TYPE_INFO_HEADERS, true,
                 ProducerConfig.ACKS_CONFIG, "all",
                 ProducerConfig.RETRIES_CONFIG, 3,
                 ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, true

@@ -24,14 +24,19 @@ public class KafkaConfig {
 
     @Bean
     public ConsumerFactory<String, ChatRequestedEvent> consumerFactory() {
-        return new DefaultKafkaConsumerFactory<>(Map.of(
-                ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers,
-                ConsumerConfig.GROUP_ID_CONFIG, "chat-service",
-                ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest",
-                ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class,
-                ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JsonDeserializer.class,
-                JsonDeserializer.TRUSTED_PACKAGES, "com.elh.commons.events,com.elh.commons.events.*"
-        ));
+        JsonDeserializer<ChatRequestedEvent> deserializer = new JsonDeserializer<>(ChatRequestedEvent.class);
+        deserializer.addTrustedPackages("com.elh.commons.events", "com.elh.commons.events.*");
+        deserializer.setUseTypeHeaders(false);
+
+        return new DefaultKafkaConsumerFactory<>(
+                Map.of(
+                        ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers,
+                        ConsumerConfig.GROUP_ID_CONFIG, "chat-service",
+                        ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest"
+                ),
+                new StringDeserializer(),
+                deserializer
+        );
     }
 
     @Bean
