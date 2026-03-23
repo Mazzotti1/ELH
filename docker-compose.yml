@@ -1,5 +1,3 @@
-version: '3.9'
-
 # ──────────────────────────────────────────────────────────────────────
 #  ELH — Every Losted History
 #  Ambiente de desenvolvimento local
@@ -57,7 +55,7 @@ services:
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_JMX_PORT: 9101
       KAFKA_JMX_HOSTNAME: localhost
-      CLUSTER_ID: 'MkU3OEVBNTcwNTJENDM2Qk
+      CLUSTER_ID: 'MkU3OEVBNTcwNTJENDM2Qk'
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
       KAFKA_DEFAULT_REPLICATION_FACTOR: 1
       KAFKA_NUM_PARTITIONS: 3
