@@ -24,6 +24,8 @@ public class CommandReceivedEvent extends BaseEvent {
 
     private java.util.Map<String, String> options;
 
+    private boolean followUp;
+
     @Override
     public String getEventType() { return "COMMAND_RECEIVED"; }
 }

@@ -44,14 +44,20 @@ public class DiscordDeliveryConsumer {
         List<MessageEmbed> embeds = buildEmbeds(payload);
 
         if (payload.getInteractionToken() != null) {
-            jda.retrieveApplicationInfo().queue(appInfo -> {
-                InteractionHook.from(jda, payload.getInteractionToken())
-                        .editOriginalEmbeds(embeds)
+            InteractionHook hook = InteractionHook.from(jda, payload.getInteractionToken());
+            if (payload.isFollowUp()) {
+                hook.sendMessageEmbeds(embeds)
+                        .queue(
+                                ok -> log.debug("Embed follow-up enviado via interaction hook"),
+                                err -> log.error("Falha ao enviar embed follow-up via hook: {}", err.getMessage())
+                        );
+            } else {
+                hook.editOriginalEmbeds(embeds)
                         .queue(
                                 ok -> log.debug("Embed enviado via interaction hook"),
                                 err -> log.error("Falha ao enviar embed via hook: {}", err.getMessage())
                         );
-            });
+            }
         } else {
             TextChannel channel = jda.getTextChannelById(payload.getChannelId());
             if (channel != null) {
@@ -120,12 +126,16 @@ public class DiscordDeliveryConsumer {
                     main.addField(f.getName(), f.getValue(), f.isInline()));
         }
 
-        if (payload.getImageUrls() != null && !payload.getImageUrls().isEmpty()) {
-            main.setImage(payload.getImageUrls().get(0));
+        List<String> validUrls = payload.getImageUrls() != null
+                ? payload.getImageUrls().stream().filter(u -> u != null && !u.isBlank()).toList()
+                : List.of();
+
+        if (!validUrls.isEmpty()) {
+            main.setImage(validUrls.get(0));
             embeds.add(main.build());
 
-            for (int i = 1; i < Math.min(payload.getImageUrls().size(), 4); i++) {
-                embeds.add(new EmbedBuilder().setImage(payload.getImageUrls().get(i)).build());
+            for (int i = 1; i < Math.min(validUrls.size(), 4); i++) {
+                embeds.add(new EmbedBuilder().setImage(validUrls.get(i)).build());
             }
         } else {
             embeds.add(main.build());

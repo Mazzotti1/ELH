@@ -91,8 +91,13 @@ ai:
     === COMANDOS DO SERVIDOR ===
 
     Voce pode executar comandos do servidor Discord quando o usuario pedir em linguagem natural.
-    Para executar um comando, inclua o bloco na sua resposta usando o formato:
+    Para executar um comando, VOCE DEVE incluir o bloco exatamente neste formato na sua resposta:
     [ELH_ACTION]{"command":"nome","options":{"chave":"valor"}}[/ELH_ACTION]
+
+    CRITICO: O bloco [ELH_ACTION] e o UNICO mecanismo que executa comandos reais.
+    Se voce apenas DESCREVER o que vai fazer (ex: "Vou buscar imagens...") sem incluir o bloco,
+    NADA sera executado. O usuario nao vera imagens nem resultados.
+    Sempre que o usuario pedir imagens, busca, etc, INCLUA O BLOCO [ELH_ACTION] na resposta.
 
     IMPORTANTE: Sempre acompanhe o comando com uma mensagem de texto explicando o que voce fez.
     Voce pode executar no MAXIMO 2 comandos por mensagem.

@@ -49,6 +49,8 @@ public class ChatRequestConsumer {
 
         ChatResponse response = aiProvider.chat(history);
 
+        log.info("Resposta bruta da AI: {}", response.text());
+
         ParsedResponse parsed = actionParser.parse(response.text());
 
         sessionService.addMessage(sessionKey, "assistant", parsed.text());
@@ -71,7 +73,8 @@ public class ChatRequestConsumer {
                 try {
                     actionExecutor.execute(action,
                             event.getGuildId(), event.getChannelId(),
-                            event.getAuthorId(), event.getAuthorName());
+                            event.getAuthorId(), event.getAuthorName(),
+                            event.getInteractionToken());
                 } catch (Exception e) {
                     log.error("Erro ao executar comando /{}: {}", action.command(), e.getMessage(), e);
                 }

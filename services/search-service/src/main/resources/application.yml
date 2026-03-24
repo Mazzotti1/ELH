@@ -29,11 +29,9 @@ spring:
     serialization:
       write-dates-as-timestamps: false
 
-google:
-  cse:
-    api-key: ${GOOGLE_CSE_API_KEY:}
-    cx: ${GOOGLE_CSE_CX:}
-    max-results: 5
+searchapi:
+  api-key: ${SEARCHAPI_KEY:}
+  max-results: 5
 
 resilience4j:
   circuitbreaker:

@@ -17,6 +17,7 @@ public class DiscordEmbedPayload {
     private String thumbnailUrl;
     private List<EmbedField> fields;
     private List<String> imageUrls;
+    private boolean followUp;
 
     @Data
     @NoArgsConstructor

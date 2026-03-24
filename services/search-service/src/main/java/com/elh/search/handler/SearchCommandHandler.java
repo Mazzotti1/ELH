@@ -61,7 +61,8 @@ public class SearchCommandHandler {
                 "🔍 " + query,
                 description,
                 "#00e5c0",
-                imageUrls
+                imageUrls,
+                event.isFollowUp()
         );
     }
 
@@ -95,7 +96,8 @@ public class SearchCommandHandler {
                 "📁 Resultados: " + termo,
                 description,
                 "#f4c430",
-                thumbnails
+                thumbnails,
+                event.isFollowUp()
         );
     }
 
@@ -124,7 +126,8 @@ public class SearchCommandHandler {
                 "📜 Historico do canal",
                 description,
                 "#5865f2",
-                null
+                null,
+                event.isFollowUp()
         );
     }
 
@@ -159,7 +162,8 @@ public class SearchCommandHandler {
                 "🖼️ Midia #" + id,
                 description,
                 "#00e5c0",
-                doc.getPermanentUrl() != null ? List.of(doc.getPermanentUrl()) : null
+                doc.getPermanentUrl() != null ? List.of(doc.getPermanentUrl()) : null,
+                event.isFollowUp()
         );
     }
 

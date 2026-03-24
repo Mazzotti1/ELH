@@ -17,13 +17,15 @@ public class ServerActionExecutor {
 
     private final KafkaTemplate<String, BaseEvent> kafkaTemplate;
 
-    public void execute(BotAction action, String guildId, String channelId, String authorId, String authorName) {
+    public void execute(BotAction action, String guildId, String channelId, String authorId, String authorName, String interactionToken) {
         CommandReceivedEvent event = CommandReceivedEvent.builder()
                 .guildId(guildId)
                 .command(action.command())
                 .channelId(channelId)
                 .authorId(authorId)
                 .authorName(authorName)
+                .interactionToken(interactionToken)
+                .followUp(true)
                 .options(action.options() != null ? action.options() : Collections.emptyMap())
                 .build();
 

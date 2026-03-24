@@ -74,8 +74,7 @@ services:
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_USERNAME: elh
       RABBITMQ_PASSWORD: elh
-      GOOGLE_CSE_API_KEY: ${GOOGLE_CSE_API_KEY:-}
-      GOOGLE_CSE_CX: ${GOOGLE_CSE_CX:-}
+      SEARCHAPI_KEY: ${SEARCHAPI_KEY:-}
     depends_on:
       kafka:
         condition: service_healthy

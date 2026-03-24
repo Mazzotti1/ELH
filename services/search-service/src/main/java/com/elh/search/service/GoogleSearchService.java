@@ -18,18 +18,15 @@ public class GoogleSearchService {
     private final RestClient restClient;
     private final InternalSearchService internalSearch;
 
-    @Value("${google.cse.api-key:}")
+    @Value("${searchapi.api-key:}")
     private String apiKey;
 
-    @Value("${google.cse.cx:}")
-    private String cx;
-
-    @Value("${google.cse.max-results:5}")
+    @Value("${searchapi.max-results:5}")
     private int maxResults;
 
     public GoogleSearchService(RestClient.Builder restClientBuilder, InternalSearchService internalSearch) {
         this.restClient = restClientBuilder
-                .baseUrl("https://www.googleapis.com/customsearch/v1")
+                .baseUrl("https://www.searchapi.io/api/v1/search")
                 .build();
         this.internalSearch = internalSearch;
     }
@@ -39,31 +36,41 @@ public class GoogleSearchService {
     public List<GoogleImageResult> searchImages(String query, String guildId, int numResults) {
         int n = Math.min(numResults > 0 ? numResults : maxResults, 10);
 
-        log.info("Google Custom Search: '{}' (n={})", query, n);
+        log.info("SearchAPI Bing Images: '{}' (n={})", query, n);
 
         Map response = restClient.get()
                 .uri(uriBuilder -> uriBuilder
-                        .queryParam("key", apiKey)
-                        .queryParam("cx", cx)
+                        .queryParam("api_key", apiKey)
+                        .queryParam("engine", "bing_images")
                         .queryParam("q", query)
-                        .queryParam("searchType", "image")
-                        .queryParam("num", n)
+                        .queryParam("count", n)
                         .build())
                 .retrieve()
                 .body(Map.class);
 
-        if (response == null || !response.containsKey("items")) {
+        if (response == null || !response.containsKey("images")) {
             return Collections.emptyList();
         }
 
-        List<Map<String, Object>> items = (List<Map<String, Object>>) response.get("items");
+        List<Map<String, Object>> items = (List<Map<String, Object>>) response.get("images");
+
         return items.stream()
-                .map(item -> new GoogleImageResult(
-                        (String) item.get("title"),
-                        (String) item.get("link"),
-                        (String) ((Map<String, Object>) item.get("image")).get("thumbnailLink"),
-                        (String) item.get("displayLink")
-                ))
+                .limit(n)
+                .map(item -> {
+                    Object originalRaw = item.get("original");
+                    String imageUrl = originalRaw instanceof Map
+                            ? (String) ((Map<String, Object>) originalRaw).get("link")
+                            : (String) originalRaw;
+                    Object thumbRaw = item.get("thumbnail");
+                    String thumbUrl = thumbRaw instanceof Map
+                            ? (String) ((Map<String, Object>) thumbRaw).get("url")
+                            : (String) thumbRaw;
+                    Object sourceRaw = item.get("source");
+                    String source = sourceRaw instanceof Map
+                            ? (String) ((Map<String, Object>) sourceRaw).get("name")
+                            : (String) sourceRaw;
+                    return new GoogleImageResult((String) item.get("title"), imageUrl, thumbUrl, source);
+                })
                 .toList();
     }
 

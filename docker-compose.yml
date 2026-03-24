@@ -17,6 +17,7 @@
 #    Elasticsearch:localhost:9200
 #    Grafana:      localhost:3000  (admin/admin)
 #    Prometheus:   localhost:9090
+#    Loki:         localhost:3100
 # ──────────────────────────────────────────────────────────────────────
 
 networks:
@@ -31,6 +32,7 @@ volumes:
   grafana-data:
   prometheus-data:
   rabbitmq-data:
+  loki-data:
 
 services:
   kafka:
@@ -190,6 +192,32 @@ services:
       - ./infra/grafana/provisioning:/etc/grafana/provisioning:ro
     depends_on:
       - prometheus
+      - loki
+    networks:
+      - elh-net
+
+  loki:
+    image: grafana/loki:2.9.8
+    container_name: elh-loki
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/loki.yml
+    volumes:
+      - ./infra/loki/loki.yml:/etc/loki/loki.yml:ro
+      - loki-data:/loki
+    networks:
+      - elh-net
+
+  promtail:
+    image: grafana/promtail:2.9.8
+    container_name: elh-promtail
+    command: -config.file=/etc/promtail/promtail.yml
+    volumes:
+      - ./infra/promtail/promtail.yml:/etc/promtail/promtail.yml:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+    depends_on:
+      - loki
     networks:
       - elh-net
 
