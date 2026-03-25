@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 @Slf4j
 @Component
@@ -35,6 +36,7 @@ public class SlashCommandListener extends ListenerAdapter {
 
         log.info("Slash command recebido: /{} de {} no guild {}", command, authorName, guildId);
 
+        String correlationId = UUID.randomUUID().toString().substring(0, 8);
         Map<String, String> options = new HashMap<>();
         event.getOptions().forEach(opt ->
                 options.put(opt.getName(), opt.getAsString())
@@ -51,6 +53,7 @@ public class SlashCommandListener extends ListenerAdapter {
                     .interactionToken(interactionToken)
                     .userMessage(userMessage)
                     .sessionKey(guildId + ":" + channelId + ":" + authorId)
+                    .correlationId(correlationId)
                     .build();
             publisher.publishChatRequested(chatEvent);
             return;
@@ -65,6 +68,7 @@ public class SlashCommandListener extends ListenerAdapter {
                 .interactionId(interactionId)
                 .interactionToken(interactionToken)
                 .options(options)
+                .correlationId(correlationId)
                 .build();
 
         publisher.publishCommandReceived(cmdEvent);

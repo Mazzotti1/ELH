@@ -4,6 +4,7 @@ import com.elh.commons.events.CommandReceivedEvent;
 import com.elh.search.handler.SearchCommandHandler;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 
@@ -24,7 +25,12 @@ public class CommandConsumer {
     public void onCommandReceived(CommandReceivedEvent event) {
         if (!HANDLED_COMMANDS.contains(event.getCommand())) return;
 
-        log.info("Comando /{} recebido de {} (guild={})", event.getCommand(), event.getAuthorName(), event.getGuildId());
-        commandHandler.handle(event);
+        MDC.put("correlationId", event.getCorrelationId() != null ? event.getCorrelationId() : event.getEventId());
+        try {
+            log.info("Comando /{} recebido de {} (guild={})", event.getCommand(), event.getAuthorName(), event.getGuildId());
+            commandHandler.handle(event);
+        } finally {
+            MDC.remove("correlationId");
+        }
     }
 }

@@ -38,7 +38,9 @@ public class KafkaProducerConfig {
 
     @Bean
     public KafkaTemplate<String, BaseEvent> kafkaTemplate(ProducerFactory<String, BaseEvent> pf) {
-        return new KafkaTemplate<>(pf);
+        KafkaTemplate<String, BaseEvent> template = new KafkaTemplate<>(pf);
+        template.setObservationEnabled(true);
+        return template;
     }
 
     @Bean public NewTopic topicDiscordMessages()  { return TopicBuilder.name(DISCORD_MESSAGES).partitions(3).replicas(1).build(); }

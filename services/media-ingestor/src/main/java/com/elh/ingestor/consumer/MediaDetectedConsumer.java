@@ -4,6 +4,7 @@ import com.elh.commons.events.MediaDetectedEvent;
 import com.elh.ingestor.service.MediaProcessingService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 
@@ -18,9 +19,13 @@ public class MediaDetectedConsumer {
 
     @KafkaListener(topics = MEDIA_DETECTED, groupId = "media-ingestor")
     public void onMediaDetected(MediaDetectedEvent event) {
-        log.info("Evento media.detected recebido: {} de {} (guild={})",
-                event.getFileName(), event.getAuthorName(), event.getGuildId());
-
-        processingService.processMedia(event);
+        MDC.put("correlationId", event.getCorrelationId() != null ? event.getCorrelationId() : event.getEventId());
+        try {
+            log.info("Evento media.detected recebido: {} de {} (guild={})",
+                    event.getFileName(), event.getAuthorName(), event.getGuildId());
+            processingService.processMedia(event);
+        } finally {
+            MDC.remove("correlationId");
+        }
     }
 }

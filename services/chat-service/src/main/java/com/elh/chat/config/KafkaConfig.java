@@ -45,6 +45,7 @@ public class KafkaConfig {
         var factory = new ConcurrentKafkaListenerContainerFactory<String, ChatRequestedEvent>();
         factory.setConsumerFactory(consumerFactory);
         factory.setConcurrency(2);
+        factory.getContainerProperties().setObservationEnabled(true);
         return factory;
     }
 
@@ -59,6 +60,8 @@ public class KafkaConfig {
 
     @Bean
     public KafkaTemplate<String, BaseEvent> kafkaTemplate(ProducerFactory<String, BaseEvent> pf) {
-        return new KafkaTemplate<>(pf);
+        KafkaTemplate<String, BaseEvent> template = new KafkaTemplate<>(pf);
+        template.setObservationEnabled(true);
+        return template;
     }
 }

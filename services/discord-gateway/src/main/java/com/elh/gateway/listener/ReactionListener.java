@@ -8,6 +8,8 @@ import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import org.springframework.stereotype.Component;
 
+import java.util.UUID;
+
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -26,6 +28,7 @@ public class ReactionListener extends ListenerAdapter {
                 .messageId(event.getMessageId())
                 .userId(event.getUserId())
                 .emoji(event.getReaction().getEmoji().getAsReactionCode())
+                .correlationId(UUID.randomUUID().toString().substring(0, 8))
                 .build();
 
         publisher.publishReactionAdded(reactionEvent);

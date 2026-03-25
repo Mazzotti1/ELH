@@ -18,6 +18,7 @@
 #    Grafana:      localhost:3000  (admin/admin)
 #    Prometheus:   localhost:9090
 #    Loki:         localhost:3100
+#    Zipkin:       localhost:9411
 # ──────────────────────────────────────────────────────────────────────
 
 networks:
@@ -218,6 +219,14 @@ services:
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
     depends_on:
       - loki
+    networks:
+      - elh-net
+
+  zipkin:
+    image: openzipkin/zipkin:3.3
+    container_name: elh-zipkin
+    ports:
+      - "9411:9411"
     networks:
       - elh-net
 

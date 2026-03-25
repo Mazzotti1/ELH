@@ -5,6 +5,7 @@ import com.elh.search.document.MediaDocument;
 import com.elh.search.repository.MediaSearchRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 
@@ -22,6 +23,8 @@ public class MediaIndexConsumer {
 
     @KafkaListener(topics = MEDIA_SAVED, groupId = "search-service")
     public void onMediaSaved(MediaSavedEvent event) {
+        MDC.put("correlationId", event.getCorrelationId() != null ? event.getCorrelationId() : event.getEventId());
+        try {
         log.info("Indexando media id={} de {} no Elasticsearch", event.getMediaId(), event.getAuthorName());
 
         MediaDocument doc = MediaDocument.builder()
@@ -41,5 +44,8 @@ public class MediaIndexConsumer {
 
         searchRepository.save(doc);
         log.info("Media id={} indexada com sucesso", event.getMediaId());
+        } finally {
+            MDC.remove("correlationId");
+        }
     }
 }

@@ -1,0 +1,230 @@
+{
+  "__inputs": [
+    {
+      "name": "DS_LOKI",
+      "label": "Loki",
+      "description": "",
+      "type": "datasource",
+      "pluginId": "loki",
+      "pluginName": "Loki"
+    }
+  ],
+  "__requires": [
+    {
+      "type": "grafana",
+      "id": "grafana",
+      "name": "Grafana",
+      "version": "10.0.0"
+    },
+    {
+      "type": "datasource",
+      "id": "loki",
+      "name": "Loki",
+      "version": "1.0.0"
+    }
+  ],
+  "title": "ELH - Logs por Servico",
+  "uid": "elh-logs",
+  "version": 1,
+  "schemaVersion": 38,
+  "refresh": "10s",
+  "time": { "from": "now-30m", "to": "now" },
+  "timepicker": {},
+  "templating": {
+    "list": [
+      {
+        "name": "filter",
+        "type": "textbox",
+        "label": "Filtro",
+        "description": "Texto livre aplicado em todos os paineis (ex: ERROR, cid=abc123, trace=xyz)",
+        "current": { "value": "" },
+        "options": [{ "selected": true, "value": "" }]
+      },
+      {
+        "name": "level",
+        "type": "custom",
+        "label": "Level",
+        "current": { "text": "Todos", "value": "" },
+        "options": [
+          { "selected": true,  "text": "Todos", "value": "" },
+          { "selected": false, "text": "ERROR", "value": "ERROR" },
+          { "selected": false, "text": "WARN",  "value": "WARN" },
+          { "selected": false, "text": "INFO",  "value": "INFO" },
+          { "selected": false, "text": "DEBUG", "value": "DEBUG" }
+        ],
+        "multi": false,
+        "includeAll": false
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Chat Service",
+      "type": "logs",
+      "datasource": { "type": "loki", "uid": "loki" },
+      "gridPos": { "h": 10, "w": 12, "x": 0, "y": 0 },
+      "options": {
+        "dedupStrategy": "none",
+        "enableLogDetails": true,
+        "prettifyLogMessage": false,
+        "showCommonLabels": false,
+        "showLabels": false,
+        "showTime": true,
+        "sortOrder": "Descending",
+        "wrapLogMessage": false
+      },
+      "targets": [
+        {
+          "datasource": { "type": "loki", "uid": "loki" },
+          "expr": "{service=\"chat-service\"} |= \"$level\" |= \"$filter\"",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Discord Gateway",
+      "type": "logs",
+      "datasource": { "type": "loki", "uid": "loki" },
+      "gridPos": { "h": 10, "w": 12, "x": 12, "y": 0 },
+      "options": {
+        "dedupStrategy": "none",
+        "enableLogDetails": true,
+        "prettifyLogMessage": false,
+        "showCommonLabels": false,
+        "showLabels": false,
+        "showTime": true,
+        "sortOrder": "Descending",
+        "wrapLogMessage": false
+      },
+      "targets": [
+        {
+          "datasource": { "type": "loki", "uid": "loki" },
+          "expr": "{service=\"discord-gateway\"} |= \"$level\" |= \"$filter\"",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Media Ingestor",
+      "type": "logs",
+      "datasource": { "type": "loki", "uid": "loki" },
+      "gridPos": { "h": 10, "w": 12, "x": 0, "y": 10 },
+      "options": {
+        "dedupStrategy": "none",
+        "enableLogDetails": true,
+        "prettifyLogMessage": false,
+        "showCommonLabels": false,
+        "showLabels": false,
+        "showTime": true,
+        "sortOrder": "Descending",
+        "wrapLogMessage": false
+      },
+      "targets": [
+        {
+          "datasource": { "type": "loki", "uid": "loki" },
+          "expr": "{service=\"media-ingestor\"} |= \"$level\" |= \"$filter\"",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Search Service",
+      "type": "logs",
+      "datasource": { "type": "loki", "uid": "loki" },
+      "gridPos": { "h": 10, "w": 12, "x": 12, "y": 10 },
+      "options": {
+        "dedupStrategy": "none",
+        "enableLogDetails": true,
+        "prettifyLogMessage": false,
+        "showCommonLabels": false,
+        "showLabels": false,
+        "showTime": true,
+        "sortOrder": "Descending",
+        "wrapLogMessage": false
+      },
+      "targets": [
+        {
+          "datasource": { "type": "loki", "uid": "loki" },
+          "expr": "{service=\"search-service\"} |= \"$level\" |= \"$filter\"",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Notification Service",
+      "type": "logs",
+      "datasource": { "type": "loki", "uid": "loki" },
+      "gridPos": { "h": 10, "w": 12, "x": 0, "y": 20 },
+      "options": {
+        "dedupStrategy": "none",
+        "enableLogDetails": true,
+        "prettifyLogMessage": false,
+        "showCommonLabels": false,
+        "showLabels": false,
+        "showTime": true,
+        "sortOrder": "Descending",
+        "wrapLogMessage": false
+      },
+      "targets": [
+        {
+          "datasource": { "type": "loki", "uid": "loki" },
+          "expr": "{service=\"notification-service\"} |= \"$level\" |= \"$filter\"",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "Poll Scheduler",
+      "type": "logs",
+      "datasource": { "type": "loki", "uid": "loki" },
+      "gridPos": { "h": 10, "w": 12, "x": 12, "y": 20 },
+      "options": {
+        "dedupStrategy": "none",
+        "enableLogDetails": true,
+        "prettifyLogMessage": false,
+        "showCommonLabels": false,
+        "showLabels": false,
+        "showTime": true,
+        "sortOrder": "Descending",
+        "wrapLogMessage": false
+      },
+      "targets": [
+        {
+          "datasource": { "type": "loki", "uid": "loki" },
+          "expr": "{service=\"poll-scheduler\"} |= \"$level\" |= \"$filter\"",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "title": "Stats Service",
+      "type": "logs",
+      "datasource": { "type": "loki", "uid": "loki" },
+      "gridPos": { "h": 10, "w": 24, "x": 0, "y": 30 },
+      "options": {
+        "dedupStrategy": "none",
+        "enableLogDetails": true,
+        "prettifyLogMessage": false,
+        "showCommonLabels": false,
+        "showLabels": false,
+        "showTime": true,
+        "sortOrder": "Descending",
+        "wrapLogMessage": false
+      },
+      "targets": [
+        {
+          "datasource": { "type": "loki", "uid": "loki" },
+          "expr": "{service=\"stats-service\"} |= \"$level\" |= \"$filter\"",
+          "refId": "A"
+        }
+      ]
+    }
+  ]
+}

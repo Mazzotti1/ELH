@@ -189,3 +189,13 @@ management:
   metrics:
     tags:
       application: chat-service
+  tracing:
+    sampling:
+      probability: 1.0
+  zipkin:
+    tracing:
+      endpoint: ${ZIPKIN_URL:http://zipkin:9411}/api/v2/spans
+
+logging:
+  pattern:
+    console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} [trace=%X{traceId}] [cid=%X{correlationId}] - %msg%n"

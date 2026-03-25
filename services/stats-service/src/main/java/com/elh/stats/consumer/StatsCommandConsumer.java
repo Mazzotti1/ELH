@@ -6,6 +6,7 @@ import com.elh.stats.service.DiscordResponseSender;
 import com.elh.stats.service.StatsService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 
@@ -21,10 +22,15 @@ public class StatsCommandConsumer {
 
     @KafkaListener(topics = KafkaTopics.DISCORD_COMMANDS)
     public void handle(CommandReceivedEvent event) {
-        switch (event.getCommand()) {
-            case "stats" -> handleStats(event);
-            case "top" -> handleTop(event);
-            default -> { /*ignorar*/ }
+        MDC.put("correlationId", event.getCorrelationId() != null ? event.getCorrelationId() : event.getEventId());
+        try {
+            switch (event.getCommand()) {
+                case "stats" -> handleStats(event);
+                case "top" -> handleTop(event);
+                default -> { /*ignorar*/ }
+            }
+        } finally {
+            MDC.remove("correlationId");
         }
     }
 

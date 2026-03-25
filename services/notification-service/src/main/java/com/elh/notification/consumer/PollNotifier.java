@@ -5,6 +5,7 @@ import com.elh.commons.events.PollClosedEvent;
 import com.elh.notification.service.DiscordNotificationSender;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 
@@ -19,6 +20,8 @@ public class PollNotifier {
 
     @KafkaListener(topics = KafkaTopics.POLL_CLOSED)
     public void handlePollClosed(PollClosedEvent event) {
+        MDC.put("correlationId", event.getCorrelationId() != null ? event.getCorrelationId() : event.getEventId());
+        try {
         log.info("Notificacao poll.closed: enquete #{} vencedor=media#{}",
                 event.getPollId(), event.getWinnerMediaId());
 
@@ -45,5 +48,8 @@ public class PollNotifier {
                 "#f4c430",
                 images
         );
+        } finally {
+            MDC.remove("correlationId");
+        }
     }
 }

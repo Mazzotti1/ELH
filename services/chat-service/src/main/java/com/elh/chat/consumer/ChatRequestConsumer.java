@@ -12,6 +12,7 @@ import com.elh.commons.events.ChatRequestedEvent;
 import com.elh.commons.events.ChatRespondedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import com.elh.commons.events.BaseEvent;
@@ -35,65 +36,71 @@ public class ChatRequestConsumer {
 
     @KafkaListener(topics = KafkaTopics.CHAT_REQUESTED)
     public void handle(ChatRequestedEvent event) {
-        log.info("Chat request de {} no guild {}: '{}'",
-                event.getAuthorName(), event.getGuildId(),
-                truncateLog(event.getUserMessage()));
+        MDC.put("correlationId", event.getCorrelationId() != null ? event.getCorrelationId() : event.getEventId());
+        try {
+            log.info("Chat request de {} no guild {}: '{}'",
+                    event.getAuthorName(), event.getGuildId(),
+                    truncateLog(event.getUserMessage()));
 
-        String sessionKey = event.getSessionKey();
+            String sessionKey = event.getSessionKey();
 
-        List<Map<String, String>> history = new ArrayList<>(
-                sessionService.getConversationHistory(sessionKey));
+            List<Map<String, String>> history = new ArrayList<>(
+                    sessionService.getConversationHistory(sessionKey));
 
-        history.add(Map.of("role", "user", "content", event.getUserMessage()));
-        sessionService.addMessage(sessionKey, "user", event.getUserMessage());
+            history.add(Map.of("role", "user", "content", event.getUserMessage()));
+            sessionService.addMessage(sessionKey, "user", event.getUserMessage());
 
-        ChatResponse response = aiProvider.chat(history);
+            ChatResponse response = aiProvider.chat(history);
 
-        log.info("Resposta bruta da AI: {}", response.text());
+            log.info("Resposta bruta da AI: {}", response.text());
 
-        ParsedResponse parsed = actionParser.parse(response.text());
+            ParsedResponse parsed = actionParser.parse(response.text());
 
-        sessionService.addMessage(sessionKey, "assistant", parsed.text());
+            sessionService.addMessage(sessionKey, "assistant", parsed.text());
 
-        sessionService.persistMessage(
-                event.getGuildId(), event.getChannelId(), event.getAuthorId(),
-                "user", event.getUserMessage(), response.inputTokens());
-        sessionService.persistMessage(
-                event.getGuildId(), event.getChannelId(), event.getAuthorId(),
-                "assistant", parsed.text(), response.outputTokens());
+            sessionService.persistMessage(
+                    event.getGuildId(), event.getChannelId(), event.getAuthorId(),
+                    "user", event.getUserMessage(), response.inputTokens());
+            sessionService.persistMessage(
+                    event.getGuildId(), event.getChannelId(), event.getAuthorId(),
+                    "assistant", parsed.text(), response.outputTokens());
 
-        String replyText = parsed.text().isEmpty()
-                ? "Pronto, acao executada!"
-                : parsed.text();
-        sender.sendMessage(event.getChannelId(), event.getInteractionToken(), replyText);
+            String replyText = parsed.text().isEmpty()
+                    ? "Pronto, acao executada!"
+                    : parsed.text();
+            sender.sendMessage(event.getChannelId(), event.getInteractionToken(), replyText);
 
-        if (parsed.hasActions()) {
-            log.info("Executando {} comando(s) via chat no canal {}", parsed.actions().size(), event.getChannelId());
-            for (var action : parsed.actions()) {
-                try {
-                    actionExecutor.execute(action,
-                            event.getGuildId(), event.getChannelId(),
-                            event.getAuthorId(), event.getAuthorName(),
-                            event.getInteractionToken());
-                } catch (Exception e) {
-                    log.error("Erro ao executar comando /{}: {}", action.command(), e.getMessage(), e);
+            if (parsed.hasActions()) {
+                log.info("Executando {} comando(s) via chat no canal {}", parsed.actions().size(), event.getChannelId());
+                for (var action : parsed.actions()) {
+                    try {
+                        actionExecutor.execute(action,
+                                event.getGuildId(), event.getChannelId(),
+                                event.getAuthorId(), event.getAuthorName(),
+                                event.getInteractionToken());
+                    } catch (Exception e) {
+                        log.error("Erro ao executar comando /{}: {}", action.command(), e.getMessage(), e);
+                    }
                 }
             }
+
+            ChatRespondedEvent respondedEvent = ChatRespondedEvent.builder()
+                    .guildId(event.getGuildId())
+                    .channelId(event.getChannelId())
+                    .interactionId(event.getInteractionId())
+                    .interactionToken(event.getInteractionToken())
+                    .botResponse(parsed.text())
+                    .inputTokens(response.inputTokens())
+                    .outputTokens(response.outputTokens())
+                    .correlationId(event.getCorrelationId())
+                    .build();
+
+            kafkaTemplate.send(KafkaTopics.CHAT_RESPONDED, event.getGuildId(), respondedEvent);
+            log.info("Chat respondido para {} ({} in / {} out tokens)",
+                    event.getAuthorName(), response.inputTokens(), response.outputTokens());
+        } finally {
+            MDC.remove("correlationId");
         }
-
-        ChatRespondedEvent respondedEvent = ChatRespondedEvent.builder()
-                .guildId(event.getGuildId())
-                .channelId(event.getChannelId())
-                .interactionId(event.getInteractionId())
-                .interactionToken(event.getInteractionToken())
-                .botResponse(parsed.text())
-                .inputTokens(response.inputTokens())
-                .outputTokens(response.outputTokens())
-                .build();
-
-        kafkaTemplate.send(KafkaTopics.CHAT_RESPONDED, event.getGuildId(), respondedEvent);
-        log.info("Chat respondido para {} ({} in / {} out tokens)",
-                event.getAuthorName(), response.inputTokens(), response.outputTokens());
     }
 
     private String truncateLog(String s) {

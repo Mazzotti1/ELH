@@ -7,6 +7,7 @@ import com.elh.poll.service.DiscordPollSender;
 import com.elh.poll.service.PollService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
@@ -31,6 +32,8 @@ public class PollCommandConsumer {
     public void handle(CommandReceivedEvent event) {
         if (!"poll".equals(event.getCommand())) return;
 
+        MDC.put("correlationId", event.getCorrelationId() != null ? event.getCorrelationId() : event.getEventId());
+        try {
         log.info("Comando /poll recebido de {} no guild {}", event.getAuthorName(), event.getGuildId());
 
         Map<String, String> opts = event.getOptions();
@@ -61,5 +64,8 @@ public class PollCommandConsumer {
                         titulo, poll.getCandidates().size(), durationHours),
                 "#f4c430"
         );
+        } finally {
+            MDC.remove("correlationId");
+        }
     }
 }

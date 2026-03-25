@@ -9,6 +9,8 @@ import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import org.springframework.stereotype.Component;
 
+import java.util.UUID;
+
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -22,6 +24,7 @@ public class MessageListener extends ListenerAdapter {
         if (!jdaEvent.isFromGuild()) return;
 
         Message msg = jdaEvent.getMessage();
+        String correlationId = UUID.randomUUID().toString().substring(0, 8);
 
         MessageReceivedEvent event = MessageReceivedEvent.builder()
                 .guildId(jdaEvent.getGuild().getId())
@@ -33,6 +36,7 @@ public class MessageListener extends ListenerAdapter {
                 .content(msg.getContentRaw())
                 .hasAttachments(!msg.getAttachments().isEmpty())
                 .hasLinks(msg.getContentRaw().contains("http"))
+                .correlationId(correlationId)
                 .build();
 
         publisher.publishMessageReceived(event);
@@ -48,6 +52,7 @@ public class MessageListener extends ListenerAdapter {
                     .fileName(att.getFileName())
                     .mimeType(att.getContentType())
                     .sizeBytes((long) att.getSize())
+                    .correlationId(correlationId)
                     .build();
 
             publisher.publishMediaDetected(mediaEvent);

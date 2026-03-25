@@ -31,5 +31,6 @@ public abstract class BaseEvent {
     private String eventId = UUID.randomUUID().toString();
     private Instant occurredAt = Instant.now();
     private String guildId;
+    private String correlationId;
     public abstract String getEventType();
 }

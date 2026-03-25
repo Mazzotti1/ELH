@@ -5,6 +5,7 @@ import com.elh.commons.events.MediaSavedEvent;
 import com.elh.notification.service.DiscordNotificationSender;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 
@@ -19,6 +20,8 @@ public class MediaSavedNotifier {
 
     @KafkaListener(topics = KafkaTopics.MEDIA_SAVED)
     public void handle(MediaSavedEvent event) {
+        MDC.put("correlationId", event.getCorrelationId() != null ? event.getCorrelationId() : event.getEventId());
+        try {
         log.debug("Notificacao media.saved: {} por {} no canal {}",
                 event.getMediaType(), event.getAuthorName(), event.getChannelId());
 
@@ -49,5 +52,8 @@ public class MediaSavedNotifier {
                 "#00e5c0",
                 images
         );
+        } finally {
+            MDC.remove("correlationId");
+        }
     }
 }

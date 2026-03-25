@@ -5,6 +5,7 @@ import com.elh.commons.events.BaseEvent;
 import com.elh.commons.events.CommandReceivedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 
@@ -27,6 +28,7 @@ public class ServerActionExecutor {
                 .interactionToken(interactionToken)
                 .followUp(true)
                 .options(action.options() != null ? action.options() : Collections.emptyMap())
+                .correlationId(MDC.get("correlationId"))
                 .build();
 
         kafkaTemplate.send(KafkaTopics.DISCORD_COMMANDS, guildId, event);

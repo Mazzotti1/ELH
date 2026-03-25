@@ -37,6 +37,7 @@ public class KafkaConfig {
         var factory = new ConcurrentKafkaListenerContainerFactory<String, BaseEvent>();
         factory.setConsumerFactory(consumerFactory);
         factory.setConcurrency(2);
+        factory.getContainerProperties().setObservationEnabled(true);
         return factory;
     }
 }
