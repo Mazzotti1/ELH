@@ -45,17 +45,15 @@ services:
       POSTGRES_DB: elh
       POSTGRES_USER: elh
       POSTGRES_PASS: elh
-      S3_BUCKET: elh-media-dev
-      S3_ENDPOINT: http://localstack:4566
-      AWS_REGION: us-east-1
-      AWS_ACCESS_KEY_ID: test
-      AWS_SECRET_ACCESS_KEY: test
+      S3_BUCKET: ${S3_BUCKET}
+      S3_ENDPOINT:
+      AWS_REGION: ${AWS_REGION}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
     depends_on:
       kafka:
         condition: service_healthy
       postgres:
-        condition: service_healthy
-      localstack:
         condition: service_healthy
     networks:
       - elh-net
